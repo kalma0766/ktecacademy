@@ -1,0 +1,21 @@
+{
+  "name": "ktecacademy",
+  "version": "1.0.0",
+  "description": "Smartktec Academy - Higher Diploma in Computational Mathematics",
+  "main": "ktecacademy.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build needed'",
+    "deploy": "vercel deploy"
+  },
+  "keywords": [
+    "education",
+    "lms",
+    "mathematics"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/analytics": "^1.1.1"
+  }
+}
