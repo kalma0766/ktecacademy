@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1f5e">
+  <meta name="description" content="12-month Higher Diploma in Computational Mathematics — from foundations to advanced AI & ML.">
+  <title>Smartktec Academy | Higher Diploma in Computational Mathematics</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #1a1f5e;
+      --accent: #f97316;
+      --light: #f0f4ff;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+    }
+    * { font-family: 'Space Grotesk', sans-serif; box-sizing: border-box; }
+    body { background: #f0f4ff; min-height: 100vh; margin: 0; }
+    .mono { font-family: 'DM Mono', monospace; }
+
+    #sidebar {
+      width: 260px; height: 100vh; background: var(--primary);
+      position: fixed; left: 0; top: 0; z-index: 50;
+      transition: transform 0.3s ease;
+      display: flex; flex-direction: column; overflow-y: auto;
+    }
+    #sidebar.closed { transform: translateX(-260px); }
+    #mainContent { margin-left: 260px; transition: margin 0.3s ease; }
+    #mainContent.full { margin-left: 0; }
+    #sidebarBackdrop { display: none; }
+
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+      color: #a5b4fc; padding: 10px 12px; background: none; border: none; text-align: left;
+      border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 14px;
+    }
+    .nav-link:hover, .nav-link.active { background: #2d3494; color: white; }
+
+    .glass-card {
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(26,31,94,0.08);
+    }
+    .stat-card { background: var(--primary); color: white; border-radius: 14px; padding: 20px; }
+    .stat-card.accent { background: var(--accent); }
+    .stat-card.success { background: var(--success); }
+    .stat-card.warn { background: var(--warn); }
+
+    .tab-btn { border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab-btn.active { border-bottom-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+    .week-card {
+      border-left: 3px solid var(--accent); background: white;
+      border-radius: 0 12px 12px 0; padding: 10px 14px; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      transition: box-shadow 0.2s;
+    }
+    .week-card:hover { box-shadow: 0 4px 16px rgba(249,115,22,0.15); }
+    .week-card.done { border-left-color: var(--success); background: #f0fdf4; }
+
+    #examOverlay {
+      position: fixed; inset: 0; background: rgba(10,10,40,0.97);
+      z-index: 200; display: none; overflow-y: auto; padding: 16px;
+    }
+    #examOverlay.open { display: block; }
+
+    #faceMonitor {
+      position: fixed; bottom: 16px; right: 16px; width: 160px;
+      border-radius: 12px; overflow: hidden; border: 2px solid var(--accent);
+      z-index: 300; display: none; background: #000;
+    }
+    #faceVideo { width: 100%; display: block; }
+    .face-badge {
+      position: absolute; top: 6px; left: 6px;
+      background: rgba(0,0,0,0.7); color: #4ade80;
+      font-size: 10px; padding: 2px 7px; border-radius: 20px;
+    }
+
+    #toastContainer { position: fixed; top: 16px; right: 16px; left: 16px; z-index: 999; display: flex; flex-direction: column; align-items: flex-end; pointer-events: none; }
+    .toast {
+      background: var(--primary); color: white; padding: 12px 18px; border-radius: 10px;
+      margin-bottom: 8px; font-size: 13px; border-left: 4px solid var(--accent);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; max-width: 360px;
+    }
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--danger); }
+    @keyframes slideIn { from { transform: translateX(60px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+
+    #authContainer { max-width: 440px; margin: 40px auto; }
+    .input-field {
+      width: 100%; padding: 12px 16px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      font-size: 14px; outline: none; transition: border 0.2s; background: white; color: #111827;
+    }
+    .input-field:focus { border-color: var(--primary); }
+    .btn-primary, .btn-accent {
+      color: white; padding: 12px 24px; border-radius: 10px; font-weight: 600;
+      cursor: pointer; border: none; transition: opacity 0.2s; width: 100%;
+    }
+    .btn-primary { background: var(--primary); }
+    .btn-accent { background: var(--accent); }
+    .btn-primary:hover, .btn-accent:hover { opacity: 0.88; }
+    .btn-primary:disabled, .btn-accent:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    @media (max-width: 768px) {
+      #sidebar { transform: translateX(-260px); }
+      #sidebar.open { transform: translateX(0); }
+      #sidebar.open + #sidebarBackdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 45; }
+      #mainContent { margin-left: 0; }
+      main { padding: 16px !important; }
+    }
+
+    .lb-row { transition: background 0.2s; }
+    .lb-row:hover { background: #f0f4ff; }
+    .lb-row.me { background: #fff7ed; }
+
+    .msg-bubble { background: white; border: 1px solid #e5e7eb; border-radius: 0 12px 12px 12px; padding: 10px 14px; max-width: 80%; width: fit-content; }
+    .msg-bubble.own { background: var(--primary); color: white; border-color: var(--primary); border-radius: 12px 0 12px 12px; margin-left: auto; }
+
+    .watermark {
+      position: fixed; bottom: 20px; left: 50%;
+      transform: translateX(-50%) rotate(-30deg);
+      font-size: 64px; color: rgba(26,31,94,0.04);
+      font-weight: 900; pointer-events: none; z-index: 1;
+      white-space: nowrap; letter-spacing: 8px;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div class="watermark" aria-hidden="true">KALMA</div>
+<div id="toastContainer" role="status" aria-live="polite"></div>
+
+<div id="loadingScreen" class="flex items-center justify-center min-h-screen text-gray-500 text-sm">
+  <i class="fas fa-circle-notch fa-spin mr-2" aria-hidden="true"></i> Loading…
+</div>
+
+<!-- ═══════════════════ AUTH SCREEN ═══════════════════ -->
+<div id="authScreen" class="hidden px-4">
+  <div id="authContainer" class="glass-card p-8">
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3" style="background:var(--primary)">
+        <i class="fas fa-graduation-cap text-2xl text-orange-400" aria-hidden="true"></i>
+      </div>
+      <h1 class="text-2xl font-bold" style="color:var(--primary)">Smartktec International Academy</h1>
+      <p class="text-sm text-gray-500 mt-1">Higher Diploma in Computational Mathematics</p>
+      <p class="text-xs mono mt-1" style="color:var(--accent)">Basic → Advanced AI & ML | 12 Months</p>
+      <div class="flex flex-col items-center mt-4">
+        <div id="qrCode" class="mb-1" aria-label="QR code linking to Selar enrolment"></div>
+        <a href="https://selar.co/smartktec-enrollment" target="_blank" rel="noopener noreferrer" class="text-xs text-gray-400 underline">Scan or tap to enrol via Selar</a>
+      </div>
+    </div>
+    <div class="flex border-b mb-5" role="tablist">
+      <button id="loginTab" type="button" role="tab" class="tab-btn active px-5 py-2 text-sm" data-auth-tab="login">Login</button>
+      <button id="signupTab" type="button" role="tab" class="tab-btn px-5 py-2 text-sm text-gray-500" data-auth-tab="signup">Sign Up</button>
+    </div>
+    <form id="loginForm" novalidate>
+      <div class="space-y-3 mb-4">
+        <label class="sr-only" for="loginEmail">Email address</label>
+        <input id="loginEmail" type="email" autocomplete="email" class="input-field" placeholder="Email address" required>
+        <label class="sr-only" for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" class="input-field" placeholder="Password" required>
+      </div>
+      <button type="submit" class="btn-primary">Login to Dashboard</button>
+      <p id="loginErr" class="text-red-500 text-xs text-center mt-2" role="alert"></p>
+    </form>
+    <form id="signupForm" class="hidden" novalidate>
+      <div class="space-y-3 mb-4">
+        <label class="sr-only" for="signupName">Full name</label>
+        <input id="signupName" type="text" autocomplete="name" class="input-field" placeholder="Full Name" required maxlength="80">
+        <label class="sr-only" for="signupEmail">Email address</label>
+        <input id="signupEmail" type="email" autocomplete="email" class="input-field" placeholder="Email address" required>
+        <label class="sr-only" for="signupPass">Password</label>
+        <input id="signupPass" type="password" autocomplete="new-password" class="input-field" placeholder="Password (min 8 characters)" required minlength="8">
+      </div>
+      <button type="submit" class="btn-accent">Create Account</button>
+      <p id="signupErr" class="text-red-500 text-xs text-center mt-2" role="alert"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════ LMS APP ═══════════════════ -->
+<div id="lmsApp" class="hidden">
+  <aside id="sidebar" aria-label="Main navigation">
+    <div class="p-5 border-b border-indigo-800">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-500">
+          <i class="fas fa-graduation-cap text-white text-sm" aria-hidden="true"></i>
+        </div>
+        <div>
+          <p class="text-white text-sm font-bold leading-none">Smartktec</p>
+          <p class="text-indigo-300 text-xs">Academy LMS</p>
+        </div>
+      </div>
+    </div>
+    <nav class="p-4 space-y-1 flex-1">
+      <button type="button" class="nav-link active" data-section="dashboard"><i class="fas fa-house-chimney w-5" aria-hidden="true"></i> Dashboard</button>
+      <button type="button" class="nav-link" data-section="courses"><i class="fas fa-book-open w-5" aria-hidden="true"></i> Course Content</button>
+      <button type="button" class="nav-link" data-section="exams"><i class="fas fa-pen-to-square w-5" aria-hidden="true"></i> Exams & Tests</button>
+      <button type="button" class="nav-link" data-section="certificates"><i class="fas fa-certificate w-5" aria-hidden="true"></i> Certificates</button>
+      <button type="button" class="nav-link" data-section="leaderboard"><i class="fas fa-trophy w-5" aria-hidden="true"></i> Leaderboard</button>
+      <button type="button" class="nav-link" data-section="discussions"><i class="fas fa-comments w-5" aria-hidden="true"></i> Discussion</button>
+      <button type="button" class="nav-link" data-section="resources"><i class="fas fa-file-pdf w-5" aria-hidden="true"></i> Resources & PDFs</button>
+      <button type="button" class="nav-link" data-section="profile"><i class="fas fa-user-circle w-5" aria-hidden="true"></i> Profile</button>
+    </nav>
+    <div class="px-4 pb-4">
+      <div class="p-3 rounded-xl bg-indigo-800 mb-3">
+        <p class="text-xs text-indigo-300">Watermarked by</p>
+        <p class="text-white text-sm font-bold mono">© Kalma</p>
+      </div>
+      <button type="button" id="logoutBtn" class="w-full text-indigo-300 text-sm hover:text-white py-2">
+        <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i>Logout
+      </button>
+    </div>
+  </aside>
+  <div id="sidebarBackdrop" aria-hidden="true"></div>
+
+  <div id="mainContent">
+    <header class="bg-white border-b px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-40" style="box-shadow:0 1px 8px rgba(26,31,94,0.07)">
+      <div class="flex items-center gap-4">
+        <button id="sidebarToggle" type="button" class="text-gray-500 hover:text-gray-700" aria-label="Toggle navigation">
+          <i class="fas fa-bars text-xl" aria-hidden="true"></i>
+        </button>
+        <h2 id="pageTitle" class="font-semibold text-gray-800">Dashboard</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <div id="xpBadge" class="mono text-xs px-3 py-1 rounded-full font-bold" style="background:#fef3c7;color:#b45309">0 XP</div>
+        <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:var(--accent)" id="avatarCircle" aria-hidden="true">K</div>
+      </div>
+    </header>
+
+    <main class="p-6 relative" style="z-index:2">
+
+      <!-- DASHBOARD -->
+      <section id="sec-dashboard" class="section-page">
+        <div class="rounded-2xl p-6 mb-6 text-white" style="background:linear-gradient(135deg,#1a1f5e 0%,#2d3494 100%)">
+          <h2 class="text-2xl font-bold mb-1">Welcome back, <span id="dashUserName">Student</span>!</h2>
+          <p class="text-indigo-200 text-sm">Your Higher Diploma journey continues. Keep going!</p>
+          <div class="mt-4 flex gap-3 flex-wrap">
+            <div class="bg-white/10 rounded-xl px-4 py-2 text-sm"><span id="daysActive">0</span> days active</div>
+            <div class="bg-white/10 rounded-xl px-4 py-2 text-sm"><span id="weeksDone">0</span> weeks completed</div>
+            <div class="bg-white/10 rounded-xl px-4 py-2 text-sm"><span id="examsPassed">0</span>/4 exams passed</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="stat-card">
+            <p class="text-xs text-indigo-200 mb-1">Overall Progress</p>
+            <p class="text-3xl font-bold" id="statProgress">0%</p>
+            <i class="fas fa-chart-line mt-2 text-indigo-300" aria-hidden="true"></i>
+          </div>
+          <div class="stat-card accent">
+            <p class="text-xs text-orange-100 mb-1">XP Points</p>
+            <p class="text-3xl font-bold" id="statXP">0</p>
+            <i class="fas fa-star mt-2 text-orange-200" aria-hidden="true"></i>
+          </div>
+          <div class="stat-card success">
+            <p class="text-xs text-green-100 mb-1">Weeks Done</p>
+            <p class="text-3xl font-bold" id="statWeeks">0/52</p>
+            <i class="fas fa-check-circle mt-2 text-green-200" aria-hidden="true"></i>
+          </div>
+          <div class="stat-card warn">
+            <p class="text-xs text-amber-100 mb-1">Current Streak</p>
+            <p class="text-3xl font-bold"><span id="statStreak">0</span> <span class="text-base font-medium">days</span></p>
+            <i class="fas fa-fire mt-2 text-amber-200" aria-hidden="true"></i>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="glass-card p-6">
+            <h3 class="font-semibold mb-4 text-gray-700">Course Progress by Quarter</h3>
+            <div id="quarterBars"></div>
+          </div>
+          <div class="glass-card p-6">
+            <h3 class="font-semibold mb-4 text-gray-700">Recent Activity</h3>
+            <ul id="activityFeed" class="space-y-3 text-sm text-gray-600"></ul>
+          </div>
+        </div>
+
+        <div class="glass-card p-5 mt-6">
+          <h3 class="font-semibold mb-3 text-gray-700"><i class="fas fa-bullhorn text-orange-400 mr-2" aria-hidden="true"></i>Announcements</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex gap-3 p-3 rounded-xl bg-indigo-50">
+              <i class="fas fa-thumbtack text-indigo-500 mt-1" aria-hidden="true"></i>
+              <div><p class="font-medium text-gray-800">Quarterly exams unlock as you progress</p><p class="text-xs text-gray-500">Complete all 13 weeks of a quarter to unlock its exam</p></div>
+            </div>
+            <div class="flex gap-3 p-3 rounded-xl bg-amber-50">
+              <i class="fas fa-award text-amber-500 mt-1" aria-hidden="true"></i>
+              <div><p class="font-medium text-gray-800">Certificates available for 4-quarter completions</p><p class="text-xs text-gray-500">Auto-generated with your name & watermark</p></div>
+            </div>
+            <div class="flex gap-3 p-3 rounded-xl bg-green-50">
+              <i class="fas fa-file-arrow-down text-green-600 mt-1" aria-hidden="true"></i>
+              <div><p class="font-medium text-gray-800">All course PDFs available in Resources</p><p class="text-xs text-gray-500">Download study material per month</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COURSES -->
+      <section id="sec-courses" class="section-page hidden">
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <div>
+            <h3 class="text-xl font-bold text-gray-800">Course Content</h3>
+            <p class="text-sm text-gray-500">12-month Higher Diploma — Basic to Advanced. Mark weeks complete as you study.</p>
+          </div>
+          <div class="ml-auto">
+            <label class="sr-only" for="quarterFilter">Filter by quarter</label>
+            <select id="quarterFilter" class="input-field text-sm" style="width:auto;padding:8px 14px">
+              <option value="all">All Quarters</option>
+              <option value="1">Quarter 1</option>
+              <option value="2">Quarter 2</option>
+              <option value="3">Quarter 3</option>
+              <option value="4">Quarter 4</option>
+            </select>
+          </div>
+        </div>
+        <div id="coursesGrid" class="grid md:grid-cols-2 gap-4"></div>
+      </section>
+
+      <!-- EXAMS -->
+      <section id="sec-exams" class="section-page hidden">
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Exams & Assessments</h3>
+        <p class="text-sm text-gray-500 mb-5">Camera monitoring is requested during exams. Ensure good lighting and stay in frame. Pass mark: 60%.</p>
+        <div class="grid md:grid-cols-2 gap-4" id="examCards"></div>
+      </section>
+
+      <!-- CERTIFICATES -->
+      <section id="sec-certificates" class="section-page hidden">
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Your Certificates</h3>
+        <p class="text-sm text-gray-500 mb-5">Certificates are awarded upon passing all 4 quarterly exams.</p>
+        <div id="certArea"></div>
+      </section>
+
+      <!-- LEADERBOARD -->
+      <section id="sec-leaderboard" class="section-page hidden">
+        <h3 class="text-xl font-bold text-gray-800 mb-5"><i class="fas fa-trophy text-amber-500 mr-2" aria-hidden="true"></i>Global Leaderboard</h3>
+        <div class="glass-card overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead style="background:var(--primary);color:white">
+              <tr><th class="py-3 px-4 text-left">#</th><th class="py-3 px-4 text-left">Student</th><th class="py-3 px-4 text-center">XP</th><th class="py-3 px-4 text-center">Weeks</th><th class="py-3 px-4 text-center">Exams</th></tr>
+            </thead>
+            <tbody id="lbBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- DISCUSSIONS -->
+      <section id="sec-discussions" class="section-page hidden">
+        <h3 class="text-xl font-bold text-gray-800 mb-5"><i class="fas fa-comments text-indigo-500 mr-2" aria-hidden="true"></i>Discussion Forum</h3>
+        <div class="glass-card p-5">
+          <div id="msgFeed" class="space-y-4 mb-4 max-h-96 overflow-y-auto" aria-live="polite"></div>
+          <form id="msgForm" class="flex gap-3">
+            <label class="sr-only" for="msgInput">Message</label>
+            <input id="msgInput" type="text" maxlength="1000" class="input-field flex-1" placeholder="Ask a question or share insight...">
+            <button type="submit" class="btn-accent" style="width:auto;padding:12px 20px" aria-label="Send message"><i class="fas fa-paper-plane" aria-hidden="true"></i></button>
+          </form>
+        </div>
+      </section>
+
+      <!-- RESOURCES -->
+      <section id="sec-resources" class="section-page hidden">
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Resources & PDF Downloads</h3>
+        <p class="text-sm text-gray-500 mb-5">Download course notes for each month. Watermarked by Kalma.</p>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="resourceGrid"></div>
+      </section>
+
+      <!-- PROFILE -->
+      <section id="sec-profile" class="section-page hidden">
+        <h3 class="text-xl font-bold text-gray-800 mb-5">My Profile</h3>
+        <div class="glass-card p-6 max-w-lg">
+          <div class="flex items-center gap-4 mb-5">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shrink-0" style="background:var(--primary)" id="profileAvatar" aria-hidden="true">K</div>
+            <div class="min-w-0">
+              <p class="font-bold text-gray-800" id="profileName">Student</p>
+              <p class="text-sm text-gray-500 break-all" id="profileEmail">email</p>
+              <span class="text-xs px-2 py-1 rounded-full mono" style="background:#fef3c7;color:#b45309" id="profileStatus">Active</span>
+            </div>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between p-3 rounded-lg bg-gray-50"><span class="text-gray-600">Total XP:</span><span class="font-bold" id="profXP">0</span></div>
+            <div class="flex justify-between p-3 rounded-lg bg-gray-50"><span class="text-gray-600">Weeks Completed:</span><span class="font-bold" id="profWeeks">0</span></div>
+            <div class="flex justify-between p-3 rounded-lg bg-gray-50"><span class="text-gray-600">Exams Passed:</span><span class="font-bold" id="profExams">0</span></div>
+            <div class="flex justify-between p-3 rounded-lg bg-gray-50"><span class="text-gray-600">Joined:</span><span class="font-bold mono text-xs" id="profJoined">-</span></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- EXAM OVERLAY -->
+<div id="examOverlay" role="dialog" aria-modal="true" aria-labelledby="examTitle">
+  <form id="examForm" style="max-width:900px;margin:24px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 20px 80px rgba(0,0,0,0.3)">
+    <div style="background:var(--primary);color:white;padding:20px;display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <h2 id="examTitle" class="text-xl font-bold">Exam</h2>
+      <div class="flex items-center gap-3">
+        <span id="examTimer" class="mono text-sm bg-white/20 rounded-lg px-2 py-1">15:00</span>
+        <button type="button" data-close-exam style="background:rgba(255,255,255,0.2);color:white;border:none;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px" aria-label="Close exam">×</button>
+      </div>
+    </div>
+    <div style="padding:24px;max-height:65vh;overflow-y:auto">
+      <div id="examContent"></div>
+    </div>
+    <div style="padding:20px;border-top:1px solid #e5e7eb;display:flex;gap:10px;justify-content:flex-end">
+      <button type="button" class="btn-primary" style="width:auto;padding:10px 20px" data-close-exam>Close</button>
+      <button type="submit" id="examSubmitBtn" class="btn-accent" style="width:auto;padding:10px 20px">Submit Exam</button>
+    </div>
+  </form>
+</div>
+<div id="faceMonitor" aria-label="Exam camera preview">
+  <video id="faceVideo" autoplay muted playsinline></video>
+  <span class="face-badge">MONITORING</span>
+</div>
+
+<script>
+  'use strict';
+
+  const ENROL_URL = 'https://selar.co/smartktec-enrollment';
+  const EXAM_SECONDS = 15 * 60;
+  const TITLES = {
+    dashboard: 'Dashboard', courses: 'Course Content', exams: 'Exams & Tests', certificates: 'Certificates',
+    leaderboard: 'Leaderboard', discussions: 'Discussion Forum', resources: 'Resources', profile: 'My Profile'
+  };
+
+  let me = null;      // { user, stats, course }
+  let currentSection = 'dashboard';
+  let exam = null;    // { id, timerId, remaining, stream }
+  let msgPollId = null;
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const isComposing = (e) => e.isComposing || e.keyCode === 229;
+
+  async function api(path, options = {}) {
+    const res = await fetch(path, {
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      ...options,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const err = new Error(data.error || data.message || 'Request failed');
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  }
+
+  function showToast(msg, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = msg;
+    $('toastContainer').appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+
+  // ═══════════ AUTH ═══════════
+  function switchAuthTab(tab) {
+    $('loginForm').classList.toggle('hidden', tab !== 'login');
+    $('signupForm').classList.toggle('hidden', tab !== 'signup');
+    $('loginTab').classList.toggle('active', tab === 'login');
+    $('signupTab').classList.toggle('active', tab === 'signup');
+    $('loginTab').classList.toggle('text-gray-500', tab !== 'login');
+    $('signupTab').classList.toggle('text-gray-500', tab !== 'signup');
+    $('loginErr').textContent = '';
+    $('signupErr').textContent = '';
+  }
+
+  async function withBusy(form, fn) {
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true;
+    try { await fn(); } finally { btn.disabled = false; }
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    const email = $('loginEmail').value.trim();
+    const password = $('loginPassword').value;
+    $('loginErr').textContent = '';
+    if (!email || !password) { $('loginErr').textContent = 'Email and password are required'; return; }
+    await withBusy(e.target, async () => {
+      try {
+        await api('/api/auth/sign-in/email', { method: 'POST', body: JSON.stringify({ email, password }) });
+        await loadAndEnter();
+      } catch (err) {
+        console.error('Login failed:', err);
+        $('loginErr').textContent = 'Invalid email or password';
+      }
+    });
+  }
+
+  async function doSignup(e) {
+    e.preventDefault();
+    const name = $('signupName').value.trim();
+    const email = $('signupEmail').value.trim();
+    const password = $('signupPass').value;
+    $('signupErr').textContent = '';
+    if (!name || !email || !password) { $('signupErr').textContent = 'All fields are required'; return; }
+    if (!/^\S+@\S+\.\S+$/.test(email)) { $('signupErr').textContent = 'Enter a valid email address'; return; }
+    if (password.length < 8) { $('signupErr').textContent = 'Password must be at least 8 characters'; return; }
+    await withBusy(e.target, async () => {
+      try {
+        await api('/api/auth/sign-up/email', { method: 'POST', body: JSON.stringify({ name, email, password }) });
+        await loadAndEnter();
+        showToast('Welcome to Smartktec Academy!');
+      } catch (err) {
+        console.error('Signup failed:', err);
+        $('signupErr').textContent = 'Could not create account. The email may already be registered.';
+      }
+    });
+  }
+
+  async function doLogout() {
+    if (!confirm('Log out of Smartktec Academy?')) return;
+    try { await api('/api/auth/sign-out', { method: 'POST', body: '{}' }); } catch (err) { console.error(err); }
+    me = null;
+    stopMsgPolling();
+    $('loginForm').reset();
+    $('signupForm').reset();
+    showScreen('auth');
+  }
+
+  function showScreen(which) {
+    $('loadingScreen').classList.add('hidden');
+    $('authScreen').classList.toggle('hidden', which !== 'auth');
+    $('lmsApp').classList.toggle('hidden', which !== 'app');
+  }
+
+  async function refreshMe() {
+    me = await api('/api/me');
+    renderAll();
+  }
+
+  async function loadAndEnter() {
+    await refreshMe();
+    showScreen('app');
+    showSection('dashboard');
+  }
+
+  // ═══════════ NAVIGATION ═══════════
+  const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+
+  function showSection(sectionId) {
+    currentSection = sectionId;
+    document.querySelectorAll('.section-page').forEach((s) => s.classList.add('hidden'));
+    $(`sec-${sectionId}`).classList.remove('hidden');
+    document.querySelectorAll('.nav-link').forEach((n) => {
+      const active = n.dataset.section === sectionId;
+      n.classList.toggle('active', active);
+      if (active) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current');
+    });
+    $('pageTitle').textContent = TITLES[sectionId] || 'Smartktec Academy';
+    if (isMobile()) $('sidebar').classList.remove('open');
+
+    if (sectionId === 'leaderboard') renderLeaderboard();
+    if (sectionId === 'discussions') { loadMessages(); startMsgPolling(); } else stopMsgPolling();
+    window.scrollTo(0, 0);
+  }
+
+  function toggleSidebar() {
+    if (isMobile()) {
+      $('sidebar').classList.toggle('open');
+    } else {
+      $('sidebar').classList.toggle('closed');
+      $('mainContent').classList.toggle('full');
+    }
+  }
+
+  // ═══════════ RENDERING ═══════════
+  function renderAll() {
+    renderHeader();
+    renderDashboard();
+    renderCourses();
+    renderExams();
+    renderCertificate();
+    renderResources();
+    renderProfile();
+  }
+
+  function renderHeader() {
+    const initial = (me.user.name || '?').trim().charAt(0).toUpperCase() || '?';
+    $('avatarCircle').textContent = initial;
+    $('profileAvatar').textContent = initial;
+    $('dashUserName').textContent = me.user.name;
+    $('xpBadge').textContent = `${me.stats.xp} XP`;
+  }
+
+  function renderDashboard() {
+    const { stats, course } = me;
+    const weeks = stats.completedWeeks.length;
+    const progress = Math.min(100, Math.floor((weeks / course.totalWeeks) * 100));
+    const done = new Set(stats.completedWeeks);
+
+    $('statProgress').textContent = progress + '%';
+    $('statXP').textContent = stats.xp;
+    $('statWeeks').textContent = `${weeks}/${course.totalWeeks}`;
+    $('statStreak').textContent = stats.streak;
+    $('daysActive').textContent = stats.daysActive;
+    $('weeksDone').textContent = weeks;
+    $('examsPassed').textContent = stats.passedExamIds.length;
+
+    $('quarterBars').innerHTML = '<div class="space-y-3">' + course.quarters.map((q) => {
+      const count = q.weeks.filter((w) => done.has(w.key)).length;
+      const pct = q.weeks.length ? (count / q.weeks.length) * 100 : 0;
+      return `
+        <div>
+          <p class="text-sm font-medium mb-1">${esc(q.title)}</p>
+          <div class="w-full bg-gray-200 rounded-full h-2" role="progressbar" aria-valuemin="0" aria-valuemax="${q.weeks.length}" aria-valuenow="${count}" aria-label="${esc(q.title)} progress">
+            <div class="bg-orange-400 h-2 rounded-full" style="width:${pct}%"></div>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">${count}/${q.weeks.length} weeks</p>
+        </div>`;
+    }).join('') + '</div>';
+
+    const icons = { week: 'fa-circle-check text-green-500', 'exam-pass': 'fa-award text-amber-500', 'exam-fail': 'fa-rotate-right text-gray-400' };
+    $('activityFeed').innerHTML = stats.activity.length
+      ? stats.activity.map((a) => `
+          <li class="flex gap-3 items-start">
+            <i class="fas ${icons[a.type]} mt-1" aria-hidden="true"></i>
+            <div><p class="text-gray-700">${esc(a.text)}</p><p class="text-xs text-gray-400">${new Date(a.at).toLocaleString()}</p></div>
+          </li>`).join('')
+      : '<li class="text-gray-400 text-sm">No activity yet. Start a lesson!</li>';
+  }
+
+  function renderCourses() {
+    const filter = $('quarterFilter').value;
+    const done = new Set(me.stats.completedWeeks);
+    $('coursesGrid').innerHTML = me.course.quarters
+      .filter((q) => filter === 'all' || String(q.id) === filter)
+      .map((q) => {
+        const count = q.weeks.filter((w) => done.has(w.key)).length;
+        const weeksHtml = q.weeks.map((w) => {
+          const isDone = done.has(w.key);
+          return `
+            <div class="week-card ${isDone ? 'done' : ''}">
+              <div class="min-w-0">
+                <p class="text-xs text-gray-400 mono">Week ${w.number}</p>
+                <p class="text-sm text-gray-800">${esc(w.title)}</p>
+              </div>
+              <button type="button" class="text-xs px-3 py-1.5 rounded-lg font-semibold shrink-0 ${isDone ? 'bg-green-100 text-green-700' : 'bg-indigo-50 text-indigo-700'}"
+                data-week="${w.key}" data-done="${isDone}" aria-pressed="${isDone}">
+                <i class="fas ${isDone ? 'fa-check' : 'fa-circle'} mr-1" aria-hidden="true"></i>${isDone ? 'Done' : 'Mark done'}
+              </button>
+            </div>`;
+        }).join('');
+        return `
+          <details class="glass-card p-5" ${filter !== 'all' ? 'open' : ''}>
+            <summary class="cursor-pointer list-none">
+              <div class="flex justify-between items-start mb-3 gap-2">
+                <h4 class="font-bold text-gray-800">${esc(q.title)}</h4>
+                <span class="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 shrink-0">${count}/${q.weeks.length} weeks</span>
+              </div>
+              <div class="flex flex-wrap gap-2 mb-1">
+                ${q.months.map((m) => `<span class="text-xs text-gray-600 bg-gray-100 rounded-full px-2 py-1">${esc(m)}</span>`).join('')}
+              </div>
+              <p class="text-xs mt-2" style="color:var(--accent)">View weeks <i class="fas fa-chevron-down ml-1" aria-hidden="true"></i></p>
+            </summary>
+            <div class="mt-4">${weeksHtml}</div>
+          </details>`;
+      }).join('');
+  }
+
+  async function toggleWeek(btn) {
+    const weekKey = btn.dataset.week;
+    const done = btn.dataset.done !== 'true';
+    btn.disabled = true;
+    try {
+      await api('/api/weeks', { method: 'POST', body: JSON.stringify({ weekKey, done }) });
+      const openIds = [...document.querySelectorAll('#coursesGrid details')].map((d) => d.open);
+      await refreshMe();
+      document.querySelectorAll('#coursesGrid details').forEach((d, i) => { d.open = openIds[i]; });
+      if (done) showToast('+10 XP — week completed');
+    } catch (err) {
+      console.error(err);
+      showToast('Could not update progress. Try again.', 'error');
+      btn.disabled = false;
+    }
+  }
+
+  function renderExams() {
+    const done = new Set(me.stats.completedWeeks);
+    $('examCards').innerHTML = me.course.quarters.map((q) => {
+      const remaining = q.weeks.filter((w) => !done.has(w.key)).length;
+      const best = me.stats.bestByExam[q.id];
+      const passed = me.stats.passedExamIds.includes(q.id);
+      const status = passed
+        ? `<span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">Passed · best ${best.score}/${best.total}</span>`
+        : best ? `<span class="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">Best ${best.score}/${best.total}</span>` : '';
+      const action = remaining > 0
+        ? `<button type="button" class="btn-accent text-sm" disabled><i class="fas fa-lock mr-1" aria-hidden="true"></i>Complete ${remaining} more week${remaining === 1 ? '' : 's'}</button>`
+        : `<button type="button" class="btn-accent text-sm" data-exam="${q.id}">${passed ? 'Retake Exam' : best ? 'Retry Exam' : 'Start Exam'}</button>`;
+      return `
+        <div class="glass-card p-5">
+          <div class="flex justify-between items-start gap-2 mb-2">
+            <h4 class="font-bold text-gray-800">Q${q.id} Exam</h4>${status}
+          </div>
+          <p class="text-sm text-gray-500 mb-3">${esc(q.examName)}</p>
+          <p class="text-xs text-gray-400 mb-4">${q.questionCount} questions • 15 mins • pass ${me.course.passPercent}%</p>
+          ${action}
+        </div>`;
+    }).join('');
+  }
+
+  async function startExam(examId) {
+    let data;
+    try {
+      data = await api(`/api/exams/${examId}`);
+    } catch (err) {
+      showToast(err.message, 'error');
+      return;
+    }
+    $('examTitle').textContent = `Q${examId} Exam`;
+    $('examContent').innerHTML = '<div class="space-y-6">' + data.questions.map((q, i) => `
+      <fieldset>
+        <legend class="font-medium mb-3 text-gray-800"><strong>Q${i + 1}:</strong> ${esc(q.prompt)}</legend>
+        <div class="space-y-2">
+          ${q.options.map((o, oi) => `
+            <label class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 hover:bg-indigo-50 cursor-pointer text-gray-700">
+              <input type="radio" name="q${i}" value="${oi}" required> ${esc(o)}
+            </label>`).join('')}
+        </div>
+      </fieldset>`).join('') + '</div>';
+
+    exam = { id: examId, count: data.questions.length, remaining: EXAM_SECONDS, timerId: null, stream: null };
+    $('examSubmitBtn').disabled = false;
+    $('examOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    updateTimer();
+    exam.timerId = setInterval(() => {
+      exam.remaining--;
+      updateTimer();
+      if (exam.remaining <= 0) { showToast('Time is up — submitting your exam.', 'error'); submitExam(true); }
+    }, 1000);
+    startCamera();
+  }
+
+  function updateTimer() {
+    const m = Math.floor(exam.remaining / 60), s = exam.remaining % 60;
+    $('examTimer').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  async function startCamera() {
+    if (!navigator.mediaDevices?.getUserMedia) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      if (!exam) { stream.getTracks().forEach((t) => t.stop()); return; }
+      exam.stream = stream;
+      $('faceVideo').srcObject = stream;
+      $('faceMonitor').style.display = 'block';
+    } catch {
+      showToast('Camera unavailable — exam continues without monitoring.', 'error');
+    }
+  }
+
+  function closeExam(force = false) {
+    if (!exam) return;
+    if (!force && !confirm('Leave the exam? Your answers will not be saved.')) return;
+    clearInterval(exam.timerId);
+    exam.stream?.getTracks().forEach((t) => t.stop());
+    $('faceVideo').srcObject = null;
+    $('faceMonitor').style.display = 'none';
+    $('examOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+    exam = null;
+  }
+
+  async function submitExam(timedOut = false) {
+    if (!exam) return;
+    const answers = [];
+    for (let i = 0; i < exam.count; i++) {
+      const checked = document.querySelector(`input[name="q${i}"]:checked`);
+      answers.push(checked ? Number(checked.value) : null);
+    }
+    if (!timedOut && answers.includes(null)) {
+      showToast('Please answer every question before submitting.', 'error');
+      return;
+    }
+    $('examSubmitBtn').disabled = true;
+    clearInterval(exam.timerId);
+    const examId = exam.id;
+    try {
+      const result = await api(`/api/exams/${examId}`, { method: 'POST', body: JSON.stringify({ answers }) });
+      closeExam(true);
+      showToast(result.passed
+        ? `Passed! You scored ${result.score}/${result.total}.`
+        : `Scored ${result.score}/${result.total}. You need ${me.course.passPercent}% to pass — try again.`, result.passed ? 'success' : 'error');
+      await refreshMe();
+    } catch (err) {
+      console.error(err);
+      showToast('Could not submit exam. Check your connection and try again.', 'error');
+      $('examSubmitBtn').disabled = false;
+    }
+  }
+
+  function renderCertificate() {
+    const passed = me.stats.passedExamIds.length;
+    if (passed < 4) {
+      $('certArea').innerHTML = `
+        <div class="glass-card p-6 max-w-lg">
+          <div class="flex items-center gap-3 mb-4">
+            <i class="fas fa-lock text-2xl text-gray-400" aria-hidden="true"></i>
+            <div><p class="font-semibold text-gray-800">Certificate locked</p><p class="text-sm text-gray-500">${passed}/4 quarterly exams passed</p></div>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-orange-400 h-2 rounded-full" style="width:${passed * 25}%"></div></div>
+        </div>`;
+      return;
+    }
+    $('certArea').innerHTML = `
+      <div class="glass-card p-6 max-w-2xl text-center" style="border:8px double #d4a017;background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 50%,#fffbeb 100%)">
+        <p class="text-xs mono tracking-widest text-amber-700">CERTIFICATE OF COMPLETION</p>
+        <p class="text-sm text-gray-600 mt-4">This certifies that</p>
+        <p class="text-3xl font-bold my-2" style="color:var(--primary)">${esc(me.user.name)}</p>
+        <p class="text-sm text-gray-600">has completed the Higher Diploma in Computational Mathematics</p>
+        <p class="text-xs text-gray-400 mt-4 mono">Smartktec International Academy · © Kalma</p>
+        <button type="button" id="certDownload" class="btn-primary mt-5" style="width:auto"><i class="fas fa-download mr-2" aria-hidden="true"></i>Download PDF</button>
+      </div>`;
+  }
+
+  function downloadCertificate() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    doc.setDrawColor(212, 160, 23); doc.setLineWidth(3); doc.rect(10, 10, 277, 190);
+    doc.setLineWidth(0.8); doc.rect(15, 15, 267, 180);
+    doc.setTextColor(240, 240, 248); doc.setFontSize(90); doc.text('KALMA', 148, 130, { align: 'center', angle: 20 });
+    doc.setTextColor(26, 31, 94); doc.setFontSize(14); doc.text('SMARTKTEC INTERNATIONAL ACADEMY', 148, 45, { align: 'center' });
+    doc.setFontSize(32); doc.text('Certificate of Completion', 148, 70, { align: 'center' });
+    doc.setFontSize(13); doc.setTextColor(80, 80, 80); doc.text('This certifies that', 148, 90, { align: 'center' });
+    doc.setFontSize(28); doc.setTextColor(249, 115, 22); doc.text(me.user.name, 148, 108, { align: 'center' });
+    doc.setFontSize(13); doc.setTextColor(80, 80, 80);
+    doc.text('has successfully completed the 12-month', 148, 124, { align: 'center' });
+    doc.text('Higher Diploma in Computational Mathematics (Basic to Advanced AI & ML)', 148, 132, { align: 'center' });
+    doc.setFontSize(10); doc.text(`Issued ${new Date().toLocaleDateString()}  ·  Watermarked by © Kalma`, 148, 170, { align: 'center' });
+    doc.save(`Smartktec-Certificate-${me.user.name.replace(/[^a-z0-9]+/gi, '-')}.pdf`);
+  }
+
+  function renderResources() {
+    const months = me.course.quarters.flatMap((q) => q.months.map((m) => ({ quarter: q, month: m })));
+    $('resourceGrid').innerHTML = months.map((r, i) => `
+      <button type="button" class="glass-card p-4 text-left hover:shadow-lg transition" data-resource="${i}">
+        <p class="text-xs text-orange-500 font-semibold mb-1">Month ${i + 1} · Q${r.quarter.id}</p>
+        <p class="font-medium text-gray-800 text-sm mb-2">${esc(r.month)} Notes</p>
+        <div class="flex justify-between items-center text-xs text-gray-500">
+          <span>PDF</span><span><i class="fas fa-download mr-1" aria-hidden="true"></i>Download</span>
+        </div>
+      </button>`).join('');
+  }
+
+  function downloadResource(index) {
+    const months = me.course.quarters.flatMap((q) => q.months.map((m) => ({ quarter: q, month: m })));
+    const r = months[index];
+    if (!r) return;
+    const weeks = r.quarter.weeks.filter((w) => w.month === r.month);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setTextColor(235, 235, 245); doc.setFontSize(80); doc.text('KALMA', 105, 170, { align: 'center', angle: 30 });
+    doc.setTextColor(26, 31, 94); doc.setFontSize(10); doc.text('Smartktec International Academy · Higher Diploma in Computational Mathematics', 15, 15);
+    doc.setFontSize(22); doc.text(`Month ${index + 1}: ${r.month}`, 15, 35);
+    doc.setFontSize(12); doc.setTextColor(80, 80, 80); doc.text(r.quarter.title, 15, 45);
+    doc.setFontSize(14); doc.setTextColor(26, 31, 94); doc.text('Weekly outline', 15, 62);
+    doc.setFontSize(12); doc.setTextColor(50, 50, 50);
+    weeks.forEach((w, i) => doc.text(`Week ${w.number}: ${w.title}`, 20, 74 + i * 9));
+    doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.text(`Prepared for ${me.user.name} · © Kalma`, 15, 285);
+    doc.save(`Smartktec-Month-${index + 1}-${r.month.replace(/[^a-z0-9]+/gi, '-')}.pdf`);
+  }
+
+  function renderProfile() {
+    const { user, stats } = me;
+    $('profileName').textContent = user.name;
+    $('profileEmail').textContent = user.email;
+    $('profXP').textContent = stats.xp;
+    $('profWeeks').textContent = stats.completedWeeks.length;
+    $('profExams').textContent = stats.passedExamIds.length;
+    $('profJoined').textContent = new Date(user.createdAt).toLocaleDateString();
+    $('profileStatus').textContent = stats.passedExamIds.length === 4 ? 'Graduate' : 'Active';
+  }
+
+  async function renderLeaderboard() {
+    $('lbBody').innerHTML = '<tr><td colspan="5" class="py-6 text-center text-gray-400">Loading…</td></tr>';
+    try {
+      const { rows } = await api('/api/leaderboard');
+      $('lbBody').innerHTML = rows.length ? rows.map((r, i) => `
+        <tr class="lb-row border-b ${r.isMe ? 'me' : ''}">
+          <td class="py-3 px-4"><strong>${i + 1}</strong></td>
+          <td class="py-3 px-4">${esc(r.name)}${r.isMe ? ' <span class="text-xs text-orange-500">(you)</span>' : ''}</td>
+          <td class="py-3 px-4 text-center font-bold">${r.xp}</td>
+          <td class="py-3 px-4 text-center">${r.weeks}</td>
+          <td class="py-3 px-4 text-center">${r.exams}</td>
+        </tr>`).join('')
+        : '<tr><td colspan="5" class="py-6 text-center text-gray-400">No students yet.</td></tr>';
+    } catch (err) {
+      console.error(err);
+      $('lbBody').innerHTML = '<tr><td colspan="5" class="py-6 text-center text-red-500">Could not load leaderboard.</td></tr>';
+    }
+  }
+
+  // ═══════════ DISCUSSION ═══════════
+  async function loadMessages() {
+    try {
+      const { messages } = await api('/api/messages');
+      const feed = $('msgFeed');
+      const atBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 40;
+      feed.innerHTML = messages.length ? messages.map((m) => `
+        <div class="msg-bubble ${m.isMine ? 'own' : ''}">
+          <p class="text-xs font-semibold ${m.isMine ? 'text-indigo-200' : 'text-orange-500'}">${esc(m.authorName)}</p>
+          <p class="text-sm whitespace-pre-wrap break-words">${esc(m.body)}</p>
+          <p class="text-[10px] mt-1 ${m.isMine ? 'text-indigo-300' : 'text-gray-400'}">${new Date(m.createdAt).toLocaleString()}</p>
+        </div>`).join('')
+        : '<p class="text-gray-400 text-sm">No messages yet. Start the conversation!</p>';
+      if (atBottom) feed.scrollTop = feed.scrollHeight;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function postMsg(e) {
+    e.preventDefault();
+    const input = $('msgInput');
+    const body = input.value.trim();
+    if (!body) return;
+    input.disabled = true;
+    try {
+      await api('/api/messages', { method: 'POST', body: JSON.stringify({ body }) });
+      input.value = '';
+      await loadMessages();
+      $('msgFeed').scrollTop = $('msgFeed').scrollHeight;
+    } catch (err) {
+      showToast(err.message || 'Could not send message', 'error');
+    } finally {
+      input.disabled = false;
+      input.focus();
+    }
+  }
+
+  function startMsgPolling() { stopMsgPolling(); msgPollId = setInterval(loadMessages, 15000); }
+  function stopMsgPolling() { if (msgPollId) clearInterval(msgPollId); msgPollId = null; }
+
+  // ═══════════ EVENTS & BOOT ═══════════
+  document.querySelectorAll('[data-auth-tab]').forEach((b) => b.addEventListener('click', () => switchAuthTab(b.dataset.authTab)));
+  $('loginForm').addEventListener('submit', doLogin);
+  $('signupForm').addEventListener('submit', doSignup);
+  $('logoutBtn').addEventListener('click', doLogout);
+  $('sidebarToggle').addEventListener('click', toggleSidebar);
+  $('sidebarBackdrop').addEventListener('click', () => $('sidebar').classList.remove('open'));
+  document.querySelectorAll('.nav-link').forEach((n) => n.addEventListener('click', () => showSection(n.dataset.section)));
+  $('quarterFilter').addEventListener('change', renderCourses);
+  $('msgForm').addEventListener('submit', postMsg);
+  $('msgInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && isComposing(e)) e.preventDefault(); });
+  $('examForm').addEventListener('submit', (e) => { e.preventDefault(); submitExam(false); });
+  document.querySelectorAll('[data-close-exam]').forEach((b) => b.addEventListener('click', () => closeExam(false)));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && exam) closeExam(false); });
+
+  document.addEventListener('click', (e) => {
+    const week = e.target.closest('[data-week]');
+    if (week) { e.preventDefault(); toggleWeek(week); return; }
+    const examBtn = e.target.closest('[data-exam]');
+    if (examBtn) { startExam(Number(examBtn.dataset.exam)); return; }
+    const res = e.target.closest('[data-resource]');
+    if (res) { downloadResource(Number(res.dataset.resource)); return; }
+    if (e.target.closest('#certDownload')) downloadCertificate();
+  });
+
+  if (window.QRCode) new QRCode($('qrCode'), { text: ENROL_URL, width: 100, height: 100 });
+
+  (async function boot() {
+    try {
+      await loadAndEnter();
+    } catch (err) {
+      if (err.status !== 401) console.error(err);
+      showScreen('auth');
+    }
+  })();
+</script>
+</body>
+</html>
